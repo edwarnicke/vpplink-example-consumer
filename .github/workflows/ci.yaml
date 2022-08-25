@@ -3,7 +3,7 @@ name: ci
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
 jobs:
   yamllint:
@@ -17,6 +17,19 @@ jobs:
         with:
           yamllint_file_or_dir: '.github/ci/yamllint.yml'
           yamllint_strict: true
+  checkgomod:
+    name: check go.mod and go.sum
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      - uses: actions/checkout@v3
+      - run: go mod tidy
+      - name: Check for changes in go.mod or go.sum
+        run: |
+          git diff --name-only --exit-code go.mod || ( echo "Run go mod tidy" && false )
+          git diff --name-only --exit-code go.sum || ( echo "Run go mod tidy" && false )
   build:
     name: build and test
     runs-on: ${{ matrix.os }}
